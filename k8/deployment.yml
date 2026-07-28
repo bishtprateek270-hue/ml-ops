@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: house-price
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: house-price
+
+  template:
+    metadata:
+      labels:
+        app: house-price
+
+    spec:
+      containers:
+      - name: house-price
+        image: house-price:v1
+        ports:
+        - containerPort: 1234

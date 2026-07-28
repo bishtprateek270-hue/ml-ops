@@ -1,0 +1,115 @@
+pipeline {
+
+    agent any
+    environment {
+        IMAGE_NAME = "house-price"
+        IMAGE_TAG  = "${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/chandranitu/mlflow-homeprice.git'
+            }
+        }
+
+        stage('Create Python Environment') {
+            steps {
+                sh '''
+                python3 -m venv venv
+
+                . venv/bin/activate
+
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Train Model') {
+            steps {
+                sh '''
+                . venv/bin/activate
+                python train.py
+                '''
+            }
+        }
+
+        stage('Find Latest MLflow Model') {
+
+            steps {
+
+                script {
+
+                    env.MODEL_PATH = sh(
+                        script: '''
+                        ls -td mlruns/1/models/* | head -1
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    echo "Latest Model = ${env.MODEL_PATH}"
+                }
+
+            }
+        }
+
+        stage('Build Docker Image') {
+
+            steps {
+                sh """
+                docker build \
+                --build-arg MODEL_PATH=${MODEL_PATH} \
+                -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                """
+
+            }
+        }
+
+        stage('Load Image into Kind') {
+
+            steps {
+                sh """
+                kind load docker-image ${IMAGE_NAME}:${IMAGE_TAG}
+                """
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+
+            steps {
+                sh """
+                kubectl set image deployment/house-price \
+                house-price=${IMAGE_NAME}:${IMAGE_TAG}
+
+                kubectl rollout status deployment/house-price
+                """
+
+            }
+        }
+
+        stage('Verify Deployment') {
+
+            steps {
+                sh '''
+                kubectl get pods
+                kubectl get svc
+                kubectl get deployment
+                '''
+            }
+        }
+    }
+
+    post {
+
+        success {
+            echo "Pipeline completed successfully."
+        }
+        failure {
+            echo "Pipeline failed."
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
