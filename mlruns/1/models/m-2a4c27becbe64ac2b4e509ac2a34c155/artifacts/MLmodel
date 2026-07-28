@@ -1,4 +1,4 @@
-artifact_path: /home/hadoop/workspace/mlflow-homePrice/mlruns/1/models/m-2a4c27becbe64ac2b4e509ac2a34c155/artifacts
+artifact_path: /home/bisht/ml-ops/mlruns/1/models/m-2a4c27becbe64ac2b4e509ac2a34c155/artifacts
 flavors:
   python_function:
     env:
