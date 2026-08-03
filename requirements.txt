@@ -6,6 +6,6 @@ numpy
 psycopg2-binary
 pymysql
 faker
-dvc
+dvc[gdrive]
 
 
