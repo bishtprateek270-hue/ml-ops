@@ -1,5 +1,4 @@
 [core]
     remote = myremote
 ['remote "myremote"']
-    url = gdrive://1CjshtB0kDd1EYeM5suD9nlsJt6qFwAR9
-
+    url = /home/bisht/dvc_remote_storage
