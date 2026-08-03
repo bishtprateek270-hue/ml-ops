@@ -1,0 +1,25 @@
+stages:
+  preprocess:
+    cmd: .venv/bin/python preprocess.py
+    deps:
+      - preprocess.py
+      - data/raw.csv
+    outs:
+      - data/train.csv
+      - data/test.csv
+  train:
+    cmd: .venv/bin/python train_model.py
+    deps:
+      - train_model.py
+      - data/train.csv
+    outs:
+      - models/model.pkl
+  evaluate:
+    cmd: .venv/bin/python evaluate.py
+    deps:
+      - evaluate.py
+      - data/test.csv
+      - models/model.pkl
+    metrics:
+      - metrics.json:
+          cache: false
