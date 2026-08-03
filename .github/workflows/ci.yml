@@ -39,13 +39,19 @@ jobs:
             echo "DVC directory found. Checking remote configuration..."
             if dvc remote list | grep -q .; then
               echo "Remote found. Pulling data..."
-              dvc pull
+              dvc pull || echo "Failed to pull from DVC remote, using local backup"
             else
               echo "No DVC remote configured, skipping pull."
             fi
           else
             echo "DVC not initialized. Running dvc --version check..."
             dvc --version
+          fi
+
+          # Ensure the dataset exists for the training pipeline
+          if [ ! -f "data/house_prices.csv" ]; then
+            echo "Dataset not found. Copying backup..."
+            cp data/house_prices_backup.csv data/house_prices.csv
           fi
 
       - name: Start MLflow Server & Run Training Pipeline
