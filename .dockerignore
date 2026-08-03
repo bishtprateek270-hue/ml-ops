@@ -1,0 +1,15 @@
+.venv/
+mlflow.db
+mlflow.db.old
+data/
+__pycache__/
+*.py
+*.md
+*.png
+*.csv
+.git/
+.gitignore
+.python-version
+jenkins/
+k8/
+DataQuality/

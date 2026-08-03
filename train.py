@@ -23,8 +23,11 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42
 )
 
+# Set tracking URI to local MLflow server
+mlflow.set_tracking_uri("http://localhost:5000")
+
 # Create Experiment
-mlflow.set_experiment("House Price Prediction")
+mlflow.set_experiment("House Price Prediction Local")
 
 with mlflow.start_run():
 
@@ -57,7 +60,8 @@ with mlflow.start_run():
     # Save Model
     mlflow.sklearn.log_model(
         sk_model=model,
-        artifact_path="house_model"
+        artifact_path="house_model",
+        registered_model_name="house-price-model"
     )
 
     print("Training Completed")

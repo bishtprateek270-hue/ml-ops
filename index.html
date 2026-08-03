@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Predictor - MLflow Client</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 28, 45, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+            --secondary: #06b6d4;
+            --secondary-glow: rgba(6, 182, 212, 0.3);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.12) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 850px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 22px 45px -12px rgba(0, 0, 0, 0.6);
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 30%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 500px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 500px) {
+            .input-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input, select {
+            width: 100%;
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px var(--secondary-glow);
+            background: rgba(17, 24, 39, 0.85);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+
+        .btn {
+            grid-column: span 2;
+            background: linear-gradient(135deg, var(--primary) 0%, #312e81 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 1.1rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px var(--primary-glow);
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 500px) {
+            .btn {
+                grid-column: span 1;
+            }
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+            background: linear-gradient(135deg, #5a52ff 0%, #3730a3 100%);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Result Panel */
+        .result-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            height: 100%;
+        }
+
+        .result-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 0.75rem;
+        }
+
+        .display-price {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+            border: 1px dashed rgba(6, 182, 212, 0.3);
+            border-radius: 16px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 150px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .price-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--secondary);
+            text-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        .price-placeholder {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .json-inspector {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .json-tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        pre {
+            background: #060913;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            color: #34d399;
+            overflow-x: auto;
+            max-height: 180px;
+            flex-grow: 1;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-glow {
+            from { text-shadow: 0 0 10px rgba(6, 182, 212, 0.2); }
+            to { text-shadow: 0 0 20px rgba(6, 182, 212, 0.6); }
+        }
+
+        .status-msg {
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .status-msg.error {
+            color: var(--error);
+            display: block;
+        }
+
+        .status-msg.success {
+            color: var(--success);
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Input Form Card -->
+        <div class="card">
+            <h1>House Price Predictor</h1>
+            <p class="subtitle">Enter the characteristics of the property below to calculate the predicted market value using the trained RandomForest model.</p>
+            
+            <form id="predictionForm" onsubmit="handlePredict(event)">
+                <div class="form-grid">
+                    <!-- Environment / Target Port Selector -->
+                    <div class="input-group full-width">
+                        <label for="environment">Target Deployment Port</label>
+                        <select id="environment" onchange="updateTargetUrl()">
+                            <option value="1234">Local MLflow Server (Port 1234)</option>
+                            <option value="1235">Docker API Container (Port 1235)</option>
+                            <option value="8080" selected>Kubernetes Service (Port 8080)</option>
+                        </select>
+                    </div>
+
+                    <!-- Lot Area -->
+                    <div class="input-group">
+                        <label for="lotArea">Lot Area (sq ft)</label>
+                        <input type="number" id="lotArea" value="9000" min="500" max="500000" required>
+                    </div>
+
+                    <!-- Ground Living Area -->
+                    <div class="input-group">
+                        <label for="grLivArea">Living Area (sq ft)</label>
+                        <input type="number" id="grLivArea" value="1900" min="300" max="20000" required>
+                    </div>
+
+                    <!-- Overall Quality -->
+                    <div class="input-group">
+                        <label for="overallQual">Overall Quality (1-10)</label>
+                        <select id="overallQual" required>
+                            <option value="1">1 - Very Poor</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="3">3 - Fair</option>
+                            <option value="4">4 - Below Average</option>
+                            <option value="5">5 - Average</option>
+                            <option value="6">6 - Above Average</option>
+                            <option value="7" selected>7 - Good</option>
+                            <option value="8">8 - Very Good</option>
+                            <option value="9">9 - Excellent</option>
+                            <option value="10">10 - Very Excellent</option>
+                        </select>
+                    </div>
+
+                    <!-- Overall Condition -->
+                    <div class="input-group">
+                        <label for="overallCond">Overall Condition (1-10)</label>
+                        <select id="overallCond" required>
+                            <option value="1">1 - Very Poor</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="3">3 - Fair</option>
+                            <option value="4">4 - Below Average</option>
+                            <option value="5" selected>5 - Average</option>
+                            <option value="6">6 - Above Average</option>
+                            <option value="7">7 - Good</option>
+                            <option value="8">8 - Very Good</option>
+                            <option value="9">9 - Excellent</option>
+                            <option value="10">10 - Very Excellent</option>
+                        </select>
+                    </div>
+
+                    <!-- Year Built -->
+                    <div class="input-group">
+                        <label for="yearBuilt">Year Built</label>
+                        <input type="number" id="yearBuilt" value="2010" min="1800" max="2026" required>
+                    </div>
+
+                    <!-- Garage Cars -->
+                    <div class="input-group">
+                        <label for="garageCars">Garage Capacity (Cars)</label>
+                        <input type="number" id="garageCars" value="2" min="0" max="10" required>
+                    </div>
+
+                    <!-- Predict button -->
+                    <button type="submit" class="btn" id="predictBtn">
+                        <div class="spinner" id="btnSpinner"></div>
+                        <span id="btnText">Predict House Price</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Result Card -->
+        <div class="card result-card">
+            <div class="result-header">Prediction Result</div>
+            
+            <div class="display-price" id="displayPrice">
+                <div class="price-placeholder" id="pricePlaceholder">
+                    Enter the values on the left and click <b>Predict House Price</b> to evaluate the property value.
+                </div>
+                <div id="priceValueWrapper" style="display: none;">
+                    <div class="price-label">Estimated Price</div>
+                    <div class="price-val" id="predictedPrice">$0.00</div>
+                </div>
+            </div>
+
+            <div class="status-msg" id="statusMessage"></div>
+
+            <!-- JSON Payload inspector -->
+            <div class="json-inspector">
+                <div class="json-tabs">
+                    <button class="tab-btn active" id="tabReqBtn" onclick="switchTab('request')">Request Payload</button>
+                    <button class="tab-btn" id="tabResBtn" onclick="switchTab('response')">API Response</button>
+                </div>
+                <pre id="jsonViewer">Select prediction variables to generate the payload structure.</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'request';
+        let latestRequest = null;
+        let latestResponse = null;
+
+        // Auto update request JSON view on load/input change
+        const inputs = ['lotArea', 'grLivArea', 'overallQual', 'overallCond', 'yearBuilt', 'garageCars'];
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', generatePayloadPreview);
+        });
+
+        function getPayload() {
+            return {
+                "dataframe_records": [
+                    {
+                        "LotArea": parseInt(document.getElementById('lotArea').value) || 0,
+                        "OverallQual": parseInt(document.getElementById('overallQual').value) || 0,
+                        "OverallCond": parseInt(document.getElementById('overallCond').value) || 0,
+                        "YearBuilt": parseInt(document.getElementById('yearBuilt').value) || 0,
+                        "GrLivArea": parseInt(document.getElementById('grLivArea').value) || 0,
+                        "GarageCars": parseInt(document.getElementById('garageCars').value) || 0
+                    }
+                ]
+            };
+        }
+
+        function generatePayloadPreview() {
+            latestRequest = getPayload();
+            if (currentTab === 'request') {
+                updateJsonViewer(latestRequest);
+            }
+        }
+
+        function updateJsonViewer(obj) {
+            const viewer = document.getElementById('jsonViewer');
+            if (obj) {
+                viewer.textContent = JSON.stringify(obj, null, 2);
+                viewer.style.color = '#34d399';
+            } else {
+                viewer.textContent = 'No data available.';
+                viewer.style.color = 'var(--text-muted)';
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tabReqBtn').classList.toggle('active', tab === 'request');
+            document.getElementById('tabResBtn').classList.toggle('active', tab === 'response');
+            
+            if (tab === 'request') {
+                updateJsonViewer(latestRequest || getPayload());
+            } else {
+                updateJsonViewer(latestResponse);
+            }
+        }
+
+        function getTargetUrl() {
+            const port = document.getElementById('environment').value;
+            return `http://localhost:${port}/invocations`;
+        }
+
+        async function handlePredict(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('predictBtn');
+            const spinner = document.getElementById('btnSpinner');
+            const btnText = document.getElementById('btnText');
+            const placeholder = document.getElementById('pricePlaceholder');
+            const valueWrapper = document.getElementById('priceValueWrapper');
+            const predictedPrice = document.getElementById('predictedPrice');
+            const statusMsg = document.getElementById('statusMessage');
+
+            // UI loading state
+            btn.disabled = true;
+            spinner.style.display = 'block';
+            btnText.textContent = 'Analyzing...';
+            statusMsg.className = 'status-msg';
+            statusMsg.style.display = 'none';
+
+            const payload = getPayload();
+            latestRequest = payload;
+            
+            const targetUrl = getTargetUrl();
+            
+            try {
+                // Post to our proxy server to avoid CORS issues
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        target_url: targetUrl,
+                        payload: payload
+                    })
+                });
+
+                const data = await response.json();
+                latestResponse = data;
+
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+                }
+
+                // Show prediction value
+                // MLflow format matches prediction output: e.g. {"predictions": [198302.242]} or {"predictions": [198302]}
+                if (data && data.predictions && data.predictions.length > 0) {
+                    const price = data.predictions[0];
+                    placeholder.style.display = 'none';
+                    valueWrapper.style.display = 'block';
+                    predictedPrice.textContent = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD'
+                    }).format(price);
+                    
+                    statusMsg.textContent = 'Prediction calculated successfully!';
+                    statusMsg.className = 'status-msg success';
+                } else {
+                    throw new Error('Unexpected response format. No predictions field found.');
+                }
+
+            } catch (err) {
+                console.error(err);
+                placeholder.style.display = 'block';
+                valueWrapper.style.display = 'none';
+                statusMsg.textContent = err.message;
+                statusMsg.className = 'status-msg error';
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Predict House Price';
+                if (currentTab === 'response') {
+                    updateJsonViewer(latestResponse);
+                }
+            }
+        }
+
+        // Initialize preview
+        generatePayloadPreview();
+    </script>
+</body>
+</html>

@@ -19,6 +19,6 @@ spec:
     spec:
       containers:
       - name: house-price
-        image: house-price:v1
+        image: house-price:v2
         ports:
         - containerPort: 1234
